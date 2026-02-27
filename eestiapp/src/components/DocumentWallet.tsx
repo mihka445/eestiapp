@@ -38,26 +38,26 @@ interface DocumentData {
 
 const defaultDocuments: DocumentData[] = [
   {
-    id: '1',
-    type: 'id-card',
-    title: 'ID-kaart',
-    subtitle: 'Isikutunnistus',
-    validUntil: '2029-12-15',
+    id: '3',
+    type: 'drivers-license',
+    title: 'Juhiluba',
+    subtitle: 'Kategooria B',
+    validUntil: '2032-03-10',
     status: 'active',
-    personalCode: '30303039914',
-    documentNumber: 'AC2002136',
-    issuedBy: 'Politsei- ja Piirivalveamet',
-    icon: CreditCard,
-    gradient: 'from-[#d6e6f5] to-[#e8f0f8]',
-    flagColors: ['#0072CE', '#000000', '#FFFFFF'],
+    documentNumber: 'EE0000000',
+    issuedBy: 'Maanteeamet',
+    icon: Car,
+    gradient: 'from-[#d98fa8] to-[#e8b8d0]',
+    flagColors: ['#003399', '#FFCC00'],
     data: {
       'PEREKONNANIMI': 'VIHRA',
       'EESNIMI': 'TOM',
-      'SUGU': 'Mees',
-      'ISIKUKOOD': '30303039914',
+      'JUHILOA NUMBER': 'EE0000000',
       'SÜNNIAEG': '03.03.1903',
-      'KEHTIB KUNI': '16.11.2026',
-      'DOKUMENDI NUMBER': 'AC2002136'
+      'KATEGOORIAD': 'B',
+      'VÄLJASTATUD': '10.03.2022',
+      'KEHTIB KUNI': '10.03.2032',
+      'VÄLJASTAJA': 'Maanteeamet'
     }
   },
   {
@@ -70,7 +70,7 @@ const defaultDocuments: DocumentData[] = [
     documentNumber: 'ES0000000',
     issuedBy: 'Politsei- ja Piirivalveamet',
     icon: Plane,
-    gradient: 'from-[#6b2d7b] to-[#4a1a5e]',
+    gradient: 'from-[#5a2d42] to-[#7a3f5a]',
     flagColors: ['#0072CE', '#000000', '#FFFFFF'],
     data: {
       'PEREKONNANIMI': 'VIHRA',
@@ -84,26 +84,26 @@ const defaultDocuments: DocumentData[] = [
     }
   },
   {
-    id: '3',
-    type: 'drivers-license',
-    title: 'Juhiluba',
-    subtitle: 'Kategooria B',
-    validUntil: '2032-03-10',
+    id: '1',
+    type: 'id-card',
+    title: 'ID-kaart',
+    subtitle: 'Isikutunnistus',
+    validUntil: '2029-12-15',
     status: 'active',
-    documentNumber: 'EE0000000',
-    issuedBy: 'Maanteeamet',
-    icon: Car,
-    gradient: 'from-[#f0b8c8] to-[#e8a0b5]',
-    flagColors: ['#003399', '#FFCC00'],
+    personalCode: '30303039914',
+    documentNumber: 'AC2002136',
+    issuedBy: 'Politsei- ja Piirivalveamet',
+    icon: CreditCard,
+    gradient: 'from-[#9ed6f0] to-[#c8e6f5]',
+    flagColors: ['#0072CE', '#000000', '#FFFFFF'],
     data: {
       'PEREKONNANIMI': 'VIHRA',
       'EESNIMI': 'TOM',
-      'JUHILOA NUMBER': 'EE0000000',
+      'SUGU': 'Mees',
+      'ISIKUKOOD': '30303039914',
       'SÜNNIAEG': '03.03.1903',
-      'KATEGOORIAD': 'B',
-      'VÄLJASTATUD': '10.03.2022',
-      'KEHTIB KUNI': '10.03.2032',
-      'VÄLJASTAJA': 'Maanteeamet'
+      'KEHTIB KUNI': '16.11.2026',
+      'DOKUMENDI NUMBER': 'AC2002136'
     }
   }
 ];
@@ -420,7 +420,7 @@ const DocumentWallet = () => {
       {/* White card container */}
       <div className="bg-white rounded-3xl shadow-lg p-6 space-y-6">
         {/* Stacked document cards */}
-        <div className="relative" style={{ height: `${120 + (documents.length - 1) * 90}px` }}>
+        <div className="relative" style={{ height: `${140 + (documents.length - 1) * 100}px` }}>
           {documents.map((doc, index) => {
             const isIdCard = doc.type === 'id-card';
             const isPassport = doc.type === 'passport';
@@ -430,17 +430,22 @@ const DocumentWallet = () => {
             return (
               <div
                 key={doc.id}
-                className={`absolute left-0 right-0 rounded-2xl cursor-pointer transition-all duration-200 hover:translate-y-[-4px] bg-gradient-to-br ${doc.gradient} shadow-md hover:shadow-lg`}
+                className={`absolute left-0 right-0 rounded-2xl cursor-pointer transition-all duration-200 hover:translate-y-[-4px] bg-gradient-to-br ${doc.gradient} shadow-md hover:shadow-lg overflow-hidden`}
                 style={{
-                  top: `${index * 90}px`,
+                  top: `${index * 100}px`,
                   zIndex: documents.length - index,
-                  height: '120px',
+                  height: '140px',
                 }}
                 onClick={() => setSelectedDocument(doc.id)}
               >
-                <div className="flex items-center h-full px-6 justify-between">
+                {/* Diagonal wave overlay */}
+                <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 140">
+                  <path d="M 0 40 Q 100 0 200 40 T 400 40 L 400 0 L 0 0 Z" fill="rgba(255, 255, 255, 0.1)" />
+                </svg>
+
+                <div className="flex items-center h-full px-6 justify-between relative z-10">
                   <div className="flex-1">
-                    <h3 className={`text-base font-semibold ${textColor}`}>{doc.title}</h3>
+                    <h3 className={`text-lg font-bold ${isPassport ? 'text-white' : 'text-[#1a3a5c]'}`}>{doc.title}</h3>
                   </div>
                   <div className="flex-shrink-0">
                     {isIdCard && <EstonianFlag className="w-12 h-8" />}
