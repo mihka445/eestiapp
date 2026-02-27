@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LogOut, Shield } from 'lucide-react';
 import AuthScreen from '@/components/AuthScreen';
 import DocumentWallet from '@/components/DocumentWallet';
@@ -16,11 +16,26 @@ const stringToHex = (str: string) => {
 };
 
 const Index = () => {
-  const [codeEntered, setCodeEntered] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [codeEntered, setCodeEntered] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('eesti-app-code-entered') === 'true';
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('eesti-app-authenticated') === 'true';
+  });
   const [activeTab, setActiveTab] = useState<'documents' | 'services'>('documents');
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState('');
+
+  // Persist authentication state to localStorage
+  useEffect(() => {
+    localStorage.setItem('eesti-app-code-entered', String(codeEntered));
+  }, [codeEntered]);
+
+  useEffect(() => {
+    localStorage.setItem('eesti-app-authenticated', String(isAuthenticated));
+  }, [isAuthenticated]);
 
   const handleCodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +54,10 @@ const Index = () => {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setCodeEntered(false);
     setActiveTab('documents');
+    localStorage.removeItem('eesti-app-code-entered');
+    localStorage.removeItem('eesti-app-authenticated');
   };
 
   // Show code entry screen first
