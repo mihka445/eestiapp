@@ -3,9 +3,11 @@ import { LogOut, Shield } from 'lucide-react';
 import AuthScreen from '@/components/AuthScreen';
 import DocumentWallet from '@/components/DocumentWallet';
 import ServicesHub from '@/components/ServicesHub';
+import { SettingsModal } from '@/components/SettingsModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 
 // Helper function to convert text to hexadecimal
 // This keeps the plain text password out of the source code
@@ -16,6 +18,7 @@ const stringToHex = (str: string) => {
 };
 
 const Index = () => {
+  const { profile } = useUserProfile();
   const [codeEntered, setCodeEntered] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem('eesti-app-code-entered') === 'true';
@@ -27,6 +30,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<'documents' | 'services'>('documents');
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
 
   // Persist authentication state to localStorage
   useEffect(() => {
@@ -113,11 +117,14 @@ const Index = () => {
         <div className="px-5 pt-4 pb-6">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <p className="text-xs text-white/70">45604115050</p>
-              <h1 className="text-xl font-bold">Mari Maasikas</h1>
+              <p className="text-xs text-white/70">{profile.personalCode}</p>
+              <h1 className="text-xl font-bold">{profile.firstName} {profile.lastName}</h1>
             </div>
             <div className="flex gap-3">
-              <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
                 <Shield size={20} />
               </button>
               <button className="p-2 hover:bg-white/10 rounded-full transition-colors" onClick={handleLogout}>
@@ -172,6 +179,9 @@ const Index = () => {
           </button>
         </div>
       </nav>
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import qrCodeImage from '@/assets/qr-code.png';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 import { 
   CreditCard, 
   Car, 
@@ -140,19 +141,24 @@ const EstonianFlag = ({ className = "w-10 h-7" }: { className?: string }) => (
   </div>
 );
 
-// EU flag component  
+// EU flag component
 const EUFlag = ({ className = "w-10 h-7" }: { className?: string }) => (
   <div className={`${className} rounded-sm overflow-hidden border border-black/10 bg-[#003399] flex items-center justify-center`}>
-    <div className="relative w-5 h-5">
+    <div className="relative w-4 h-4 flex items-center justify-center">
       {Array.from({ length: 12 }).map((_, i) => {
         const angle = (i * 30 - 90) * (Math.PI / 180);
-        const x = 10 + 8 * Math.cos(angle);
-        const y = 10 + 8 * Math.sin(angle);
+        const x = 8 + 6 * Math.cos(angle);
+        const y = 8 + 6 * Math.sin(angle);
         return (
           <div
             key={i}
-            className="absolute w-1.5 h-1.5 text-[#FFCC00]"
-            style={{ left: `${x}px`, top: `${y}px`, fontSize: '6px' }}
+            className="absolute text-[#FFCC00]"
+            style={{
+              left: `${x}px`,
+              top: `${y}px`,
+              fontSize: '5px',
+              transform: 'translate(-50%, -50%)'
+            }}
           >
             ★
           </div>
@@ -172,17 +178,49 @@ const PassportIcon = ({ className = "w-10 h-7" }: { className?: string }) => (
 );
 
 const DocumentWallet = () => {
+  const { profile } = useUserProfile();
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Record<string, string>>({});
-  const [documents, setDocuments] = useState<DocumentData[]>(loadDocuments);
+  const [documents, setDocuments] = useState<DocumentData[]>(() => {
+    const docs = loadDocuments();
+    // Update names from profile for all documents
+    return docs.map(doc => ({
+      ...doc,
+      data: {
+        ...doc.data,
+        'EESNIMI': profile.firstName,
+        'PEREKONNANIMI': profile.lastName,
+        'ISIKUKOOD': profile.personalCode,
+        'SÜNNIAEG': profile.birthDate,
+        'SUGU': profile.gender
+      }
+    }));
+  });
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     saveDocuments(documents);
   }, [documents]);
+
+  // Sync profile changes with documents
+  useEffect(() => {
+    setDocuments(prevDocs =>
+      prevDocs.map(doc => ({
+        ...doc,
+        data: {
+          ...doc.data,
+          'EESNIMI': profile.firstName,
+          'PEREKONNANIMI': profile.lastName,
+          'ISIKUKOOD': profile.personalCode,
+          'SÜNNIAEG': profile.birthDate,
+          'SUGU': profile.gender
+        }
+      }))
+    );
+  }, [profile]);
 
   // Reset sensitive info visibility when opening a document
   useEffect(() => {
