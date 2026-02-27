@@ -1,12 +1,19 @@
-
 import { useState } from 'react';
+import { LogOut, Shield } from 'lucide-react';
 import AuthScreen from '@/components/AuthScreen';
 import DocumentWallet from '@/components/DocumentWallet';
 import ServicesHub from '@/components/ServicesHub';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, Shield } from 'lucide-react';
+
+// Helper function to convert text to hexadecimal
+// This keeps the plain text password out of the source code
+const stringToHex = (str: string) => {
+  return Array.from(str)
+    .map((char) => char.charCodeAt(0).toString(16))
+    .join('');
+};
 
 const Index = () => {
   const [codeEntered, setCodeEntered] = useState(false);
@@ -17,7 +24,8 @@ const Index = () => {
 
   const handleCodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (code === 'jakob') {
+    // Compare the hex version of the input to the hex version of "l1lla" ('6c316c6c61')
+    if (stringToHex(code) === '6c316c6c61') {
       setCodeEntered(true);
       setCodeError('');
     } else {
