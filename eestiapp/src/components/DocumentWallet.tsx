@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import qrCodeImage from '@/assets/qr-code.png';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 import { 
   CreditCard, 
   Car, 
@@ -39,26 +39,26 @@ interface DocumentData {
 
 const defaultDocuments: DocumentData[] = [
   {
-    id: '1',
-    type: 'id-card',
-    title: 'ID-kaart',
-    subtitle: 'Isikutunnistus',
-    validUntil: '2029-12-15',
+    id: '3',
+    type: 'drivers-license',
+    title: 'Juhiluba',
+    subtitle: 'Kategooria B',
+    validUntil: '2032-03-10',
     status: 'active',
-    personalCode: '30303039914',
-    documentNumber: 'AC2002136',
-    issuedBy: 'Politsei- ja Piirivalveamet',
-    icon: CreditCard,
-    gradient: 'from-[#d6e6f5] to-[#e8f0f8]',
-    flagColors: ['#0072CE', '#000000', '#FFFFFF'],
+    documentNumber: 'EE0000000',
+    issuedBy: 'Maanteeamet',
+    icon: Car,
+    gradient: 'from-[#d98fa8] to-[#e8b8d0]',
+    flagColors: ['#003399', '#FFCC00'],
     data: {
       'PEREKONNANIMI': 'VIHRA',
       'EESNIMI': 'TOM',
-      'SUGU': 'Mees',
-      'ISIKUKOOD': '30303039914',
+      'JUHILOA NUMBER': 'EE0000000',
       'SÜNNIAEG': '03.03.1903',
-      'KEHTIB KUNI': '16.11.2026',
-      'DOKUMENDI NUMBER': 'AC2002136'
+      'KATEGOORIAD': 'B',
+      'VÄLJASTATUD': '10.03.2022',
+      'KEHTIB KUNI': '10.03.2032',
+      'VÄLJASTAJA': 'Maanteeamet'
     }
   },
   {
@@ -71,7 +71,7 @@ const defaultDocuments: DocumentData[] = [
     documentNumber: 'ES0000000',
     issuedBy: 'Politsei- ja Piirivalveamet',
     icon: Plane,
-    gradient: 'from-[#6b2d7b] to-[#4a1a5e]',
+    gradient: 'from-[#5a2d42] to-[#7a3f5a]',
     flagColors: ['#0072CE', '#000000', '#FFFFFF'],
     data: {
       'PEREKONNANIMI': 'VIHRA',
@@ -85,26 +85,26 @@ const defaultDocuments: DocumentData[] = [
     }
   },
   {
-    id: '3',
-    type: 'drivers-license',
-    title: 'Juhiluba',
-    subtitle: 'Kategooria B',
-    validUntil: '2032-03-10',
+    id: '1',
+    type: 'id-card',
+    title: 'ID-kaart',
+    subtitle: 'Isikutunnistus',
+    validUntil: '2029-12-15',
     status: 'active',
-    documentNumber: 'EE0000000',
-    issuedBy: 'Maanteeamet',
-    icon: Car,
-    gradient: 'from-[#f0b8c8] to-[#e8a0b5]',
-    flagColors: ['#003399', '#FFCC00'],
+    personalCode: '30303039914',
+    documentNumber: 'AC2002136',
+    issuedBy: 'Politsei- ja Piirivalveamet',
+    icon: CreditCard,
+    gradient: 'from-[#9ed6f0] to-[#c8e6f5]',
+    flagColors: ['#0072CE', '#000000', '#FFFFFF'],
     data: {
       'PEREKONNANIMI': 'VIHRA',
       'EESNIMI': 'TOM',
-      'JUHILOA NUMBER': 'EE0000000',
+      'SUGU': 'Mees',
+      'ISIKUKOOD': '30303039914',
       'SÜNNIAEG': '03.03.1903',
-      'KATEGOORIAD': 'B',
-      'VÄLJASTATUD': '10.03.2022',
-      'KEHTIB KUNI': '10.03.2032',
-      'VÄLJASTAJA': 'Maanteeamet'
+      'KEHTIB KUNI': '16.11.2026',
+      'DOKUMENDI NUMBER': 'AC2002136'
     }
   }
 ];
@@ -141,19 +141,24 @@ const EstonianFlag = ({ className = "w-10 h-7" }: { className?: string }) => (
   </div>
 );
 
-// EU flag component  
+// EU flag component
 const EUFlag = ({ className = "w-10 h-7" }: { className?: string }) => (
   <div className={`${className} rounded-sm overflow-hidden border border-black/10 bg-[#003399] flex items-center justify-center`}>
-    <div className="relative w-5 h-5">
+    <div className="relative w-4 h-4 flex items-center justify-center">
       {Array.from({ length: 12 }).map((_, i) => {
         const angle = (i * 30 - 90) * (Math.PI / 180);
-        const x = 10 + 8 * Math.cos(angle);
-        const y = 10 + 8 * Math.sin(angle);
+        const x = 8 + 6 * Math.cos(angle);
+        const y = 8 + 6 * Math.sin(angle);
         return (
           <div
             key={i}
-            className="absolute w-1.5 h-1.5 text-[#FFCC00]"
-            style={{ left: `${x}px`, top: `${y}px`, fontSize: '6px' }}
+            className="absolute text-[#FFCC00]"
+            style={{
+              left: `${x}px`,
+              top: `${y}px`,
+              fontSize: '5px',
+              transform: 'translate(-50%, -50%)'
+            }}
           >
             ★
           </div>
@@ -173,17 +178,49 @@ const PassportIcon = ({ className = "w-10 h-7" }: { className?: string }) => (
 );
 
 const DocumentWallet = () => {
+  const { profile } = useUserProfile();
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Record<string, string>>({});
-  const [documents, setDocuments] = useState<DocumentData[]>(loadDocuments);
+  const [documents, setDocuments] = useState<DocumentData[]>(() => {
+    const docs = loadDocuments();
+    // Update names from profile for all documents
+    return docs.map(doc => ({
+      ...doc,
+      data: {
+        ...doc.data,
+        'EESNIMI': profile.firstName,
+        'PEREKONNANIMI': profile.lastName,
+        'ISIKUKOOD': profile.personalCode,
+        'SÜNNIAEG': profile.birthDate,
+        'SUGU': profile.gender
+      }
+    }));
+  });
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     saveDocuments(documents);
   }, [documents]);
+
+  // Sync profile changes with documents
+  useEffect(() => {
+    setDocuments(prevDocs =>
+      prevDocs.map(doc => ({
+        ...doc,
+        data: {
+          ...doc.data,
+          'EESNIMI': profile.firstName,
+          'PEREKONNANIMI': profile.lastName,
+          'ISIKUKOOD': profile.personalCode,
+          'SÜNNIAEG': profile.birthDate,
+          'SUGU': profile.gender
+        }
+      }))
+    );
+  }, [profile]);
 
   // Reset sensitive info visibility when opening a document
   useEffect(() => {
@@ -272,88 +309,66 @@ const DocumentWallet = () => {
     const displayData = isEditing ? editedData : doc.data;
     const nameFields = ['PEREKONNANIMI', 'EESNIMI'];
     const otherFields = Object.entries(displayData).filter(([k]) => !nameFields.includes(k));
-    
+
     return (
-      <div className="min-h-screen bg-white">
+      <div className="w-full flex flex-col">
         {/* Header */}
-        <div className="bg-[#1a3a5c] text-white">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                onClick={() => { setSelectedDocument(null); setIsEditing(false); }}
-                className="text-white hover:bg-white/10 p-2 h-auto"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <p className="text-xs text-white/70">Dokumendid</p>
-                <h1 className="text-base font-semibold">Isikutuvastus</h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {!isEditing ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleEdit}
-                  className="text-white hover:bg-white/10 h-auto p-2"
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-              ) : (
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={handleCancel} className="text-white hover:bg-white/10 h-auto p-2">
-                    <X className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleSave} className="text-white hover:bg-white/10 h-auto p-2">
-                    <Check className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
+        <div className="bg-gradient-to-b from-[#1a3a5c] to-[#0f2847] text-white mb-6">
+          <div className="flex items-center gap-4 px-5 py-4">
+            <Button
+              variant="ghost"
+              onClick={() => { setSelectedDocument(null); setIsEditing(false); }}
+              className="text-white hover:bg-white/10 p-0 h-auto"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </Button>
+            <div>
+              <p className="text-xs text-white/70">Dokumentid</p>
+              <h1 className="text-lg font-semibold">{doc.title}</h1>
             </div>
           </div>
         </div>
 
-        {/* Document card header */}
-        <div className="px-5 pt-5 pb-3">
-          <div className="flex items-start justify-between mb-5">
+        {/* White card container */}
+        <div className="bg-white rounded-3xl shadow-lg p-6 space-y-6">
+          {/* Document header with flags */}
+          <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-2">
-              <p className="text-xs font-semibold text-[#1a3a5c] tracking-wide">EESTI VABARIIK</p>
-              <EstonianFlag className="w-8 h-5" />
+              <p className="text-sm font-semibold text-[#1a3a5c] tracking-wide">EESTI VABARIIK</p>
+              <EstonianFlag className="w-10 h-7" />
             </div>
             <div className="text-right">
-              <p className="text-xs font-semibold text-[#1a3a5c] tracking-wide">ISIKUTUNNISTUS</p>
-              <p className="text-[10px] text-gray-400 italic">Identity Card</p>
+              <p className="text-sm font-semibold text-[#1a3a5c] tracking-wide">ISIKUTUNNISTUS</p>
+              <p className="text-xs text-gray-500">Identity Card</p>
             </div>
           </div>
 
-          {/* Photo + Name */}
-          <div className="flex gap-5 mb-4">
-            <div 
-              className="w-24 h-28 bg-gray-100 rounded-lg border border-gray-200 flex flex-col items-center justify-center flex-shrink-0 cursor-pointer hover:bg-gray-50 transition-colors overflow-hidden"
+          {/* Photo + Name section */}
+          <div className="flex gap-6">
+            <div
+              className="w-20 h-24 bg-gray-100 rounded-lg border border-gray-200 flex flex-col items-center justify-center flex-shrink-0 cursor-pointer hover:bg-gray-50 transition-colors overflow-hidden"
               onClick={handlePhotoUpload}
             >
               {doc.photo ? (
                 <img src={doc.photo} alt="Dokumendi foto" className="w-full h-full object-cover" />
               ) : (
                 <>
-                  <User className="w-10 h-10 text-gray-300" />
-                  <span className="text-[10px] text-blue-500 mt-1">Avan foto</span>
+                  <User className="w-8 h-8 text-gray-300" />
+                  <span className="text-[9px] text-[#0073e6] mt-1 font-medium text-center">Avan foto</span>
                 </>
               )}
             </div>
-            <div className="flex-1 pt-1">
+            <div className="flex-1 space-y-3">
               {nameFields.map(field => {
                 const val = displayData[field];
                 if (!val) return null;
                 return (
-                  <div key={field} className="mb-2">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">{field}</p>
+                  <div key={field}>
+                    <p className="text-xs font-semibold text-[#0073e6] uppercase tracking-widest">{field}</p>
                     {isEditing ? (
-                      <Input value={val} onChange={(e) => handleInputChange(field, e.target.value)} className="h-8 text-sm mt-0.5" />
+                      <Input value={val} onChange={(e) => handleInputChange(field, e.target.value)} className="h-7 text-sm mt-1" />
                     ) : (
-                      <p className="text-lg font-bold text-[#1a3a5c]">{val}</p>
+                      <p className="text-base font-bold text-[#1a3a5c]">{val}</p>
                     )}
                   </div>
                 );
@@ -361,55 +376,52 @@ const DocumentWallet = () => {
             </div>
           </div>
 
-          {/* Status badge */}
-          <div className="flex justify-center mb-3">
+          {/* Status badge - centered */}
+          <div className="flex justify-center py-2">
             {getStatusBadge(doc.status, doc.validUntil)}
           </div>
 
+          {/* Divider */}
+          <div className="h-px bg-gray-200" />
+
+          {/* Data fields in two columns */}
+          <div className="grid grid-cols-2 gap-6 gap-y-5">
+            {otherFields.map(([key, value]) => {
+              const isSensitive = sensitiveFields.includes(key);
+              const displayValue = showSensitiveInfo || !isSensitive ? value : '••••••••••';
+              return (
+                <div key={key} className="flex flex-col">
+                  <p className="text-xs font-semibold text-[#0073e6] uppercase tracking-widest mb-1">{key}</p>
+                  <div className="flex items-start gap-2">
+                    {isEditing ? (
+                      <Input value={value} onChange={(e) => handleInputChange(key, e.target.value)} className="h-7 text-sm flex-1" />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900">{displayValue}</p>
+                    )}
+                    {isSensitive && !isEditing && showSensitiveInfo && (
+                      <button
+                        onClick={() => handleCopy(value, key)}
+                        className="p-1 text-gray-400 hover:text-[#0073e6] transition-colors flex-shrink-0"
+                        title="Kopeeri"
+                      >
+                        {copiedField === key ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           {/* Reveal sensitive data button */}
-          <div className="flex justify-center mb-5">
+          <div className="flex justify-center pt-2">
             <Button
-              variant={showSensitiveInfo ? "outline" : "default"}
-              size="sm"
               onClick={() => setShowSensitiveInfo(prev => !prev)}
-              className="rounded-full px-5 gap-2 text-xs"
+              className="w-full h-12 bg-[#0073e6] hover:bg-[#0056b3] text-white font-semibold rounded-full"
             >
-              {showSensitiveInfo ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              {showSensitiveInfo ? 'Peida isikuandmed' : 'Kuva isikuandmed'}
+              {showSensitiveInfo ? 'Peida isikuandmed' : 'Kuva isikutuvastuse kood'}
             </Button>
           </div>
-        </div>
-
-        {/* Divider */}
-        <div className="h-px bg-gray-100 mx-5" />
-
-        {/* Data fields */}
-        <div className="px-5 py-4 space-y-4">
-          {otherFields.map(([key, value]) => {
-            const isSensitive = sensitiveFields.includes(key);
-            const displayValue = showSensitiveInfo || !isSensitive ? value : '••••••••••';
-            return (
-              <div key={key} className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">{key}</p>
-                  {isEditing ? (
-                    <Input value={value} onChange={(e) => handleInputChange(key, e.target.value)} className="h-8 text-sm mt-0.5" />
-                  ) : (
-                    <p className="text-sm font-semibold text-[#1a3a5c] mt-0.5">{displayValue}</p>
-                  )}
-                </div>
-                {isSensitive && !isEditing && showSensitiveInfo && (
-                  <button
-                    onClick={() => handleCopy(value, key)}
-                    className="ml-3 p-1.5 text-gray-400 hover:text-[#1a3a5c] transition-colors"
-                    title="Kopeeri"
-                  >
-                    {copiedField === key ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                )}
-              </div>
-            );
-          })}
         </div>
       </div>
     );
@@ -417,38 +429,41 @@ const DocumentWallet = () => {
 
   // ─── LIST VIEW (Wallet Stack) ───
   return (
-    <div className="min-h-screen bg-[#1a3a5c]">
-      {/* Header */}
-      <div className="px-5 pt-6 pb-4">
-        <h1 className="text-2xl font-bold text-white">Dokumendid</h1>
-      </div>
-
-      {/* Stacked wallet cards */}
-      <div className="px-5 pb-6">
-        <div className="relative" style={{ height: `${80 + (documents.length - 1) * 72 + 20}px` }}>
+    <div className="w-full">
+      {/* White card container */}
+      <div className="bg-white rounded-3xl shadow-lg p-6 space-y-6">
+        {/* Stacked document cards */}
+        <div className="relative" style={{ height: `${140 + (documents.length - 1) * 100}px` }}>
           {documents.map((doc, index) => {
             const isIdCard = doc.type === 'id-card';
             const isPassport = doc.type === 'passport';
             const isDL = doc.type === 'drivers-license';
-            const textColor = isPassport ? 'text-white' : 'text-[#1a3a5c]';
+            const textColor = isPassport ? 'text-white' : 'text-gray-900';
 
             return (
               <div
                 key={doc.id}
-                className={`absolute left-0 right-0 rounded-2xl cursor-pointer transition-all duration-300 hover:translate-y-[-2px] bg-gradient-to-br ${doc.gradient} shadow-lg`}
-                style={{ 
-                  top: `${index * 72}px`,
-                  zIndex: index + 1,
-                  height: '80px',
+                className={`absolute left-0 right-0 rounded-2xl cursor-pointer transition-all duration-200 hover:translate-y-[-4px] bg-gradient-to-br ${doc.gradient} shadow-md hover:shadow-lg overflow-hidden`}
+                style={{
+                  top: `${index * 100}px`,
+                  zIndex: documents.length - index,
+                  height: '140px',
                 }}
                 onClick={() => setSelectedDocument(doc.id)}
               >
-                <div className="flex items-center h-full px-5">
-                  <h3 className={`text-lg font-semibold ${textColor}`}>{doc.title}</h3>
-                  <div className="flex-1 flex justify-center">
-                    {isIdCard && <EstonianFlag />}
-                    {isPassport && <PassportIcon />}
-                    {isDL && <EUFlag />}
+                {/* Diagonal wave overlay */}
+                <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 140">
+                  <path d="M 0 40 Q 100 0 200 40 T 400 40 L 400 0 L 0 0 Z" fill="rgba(255, 255, 255, 0.1)" />
+                </svg>
+
+                <div className="flex items-center h-full px-6 justify-between relative z-10">
+                  <div className="flex-1">
+                    <h3 className={`text-lg font-bold ${isPassport ? 'text-white' : 'text-[#1a3a5c]'}`}>{doc.title}</h3>
+                  </div>
+                  <div className="flex-shrink-0">
+                    {isIdCard && <EstonianFlag className="w-12 h-8" />}
+                    {isPassport && <PassportIcon className="w-12 h-8" />}
+                    {isDL && <EUFlag className="w-12 h-8" />}
                   </div>
                 </div>
               </div>
@@ -457,20 +472,20 @@ const DocumentWallet = () => {
         </div>
       </div>
 
-      {/* Scan button */}
-      <div className="px-5 pb-8">
-        <button 
+      {/* Scan documents button */}
+      <div className="flex justify-center mt-8">
+        <button
           onClick={() => setShowQR(true)}
-          className="flex items-center justify-center gap-2 w-full text-white/80 hover:text-white transition-colors py-3"
+          className="flex items-center justify-center gap-2 text-[#1a3a5c] hover:text-[#0f2847] transition-colors py-3 font-medium text-sm"
         >
-          <ScanLine className="w-5 h-5" />
-          <span className="text-sm font-medium">Skaneeri dokumenti</span>
+          <ScanLine className="w-4 h-4" />
+          <span>Skaneeri dokumenti</span>
         </button>
       </div>
 
       {/* QR Code Modal */}
       {showQR && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" onClick={() => setShowQR(false)}>
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setShowQR(false)}>
           <div className="bg-white rounded-2xl p-6 mx-6 max-w-sm w-full" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-[#1a3a5c]">Skaneeri dokumenti</h2>

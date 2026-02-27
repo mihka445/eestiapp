@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LogOut, Shield } from 'lucide-react';
 import AuthScreen from '@/components/AuthScreen';
 import DocumentWallet from '@/components/DocumentWallet';
 import ServicesHub from '@/components/ServicesHub';
+import { SettingsModal } from '@/components/SettingsModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 
 // Helper function to convert text to hexadecimal
 // This keeps the plain text password out of the source code
@@ -16,11 +18,28 @@ const stringToHex = (str: string) => {
 };
 
 const Index = () => {
-  const [codeEntered, setCodeEntered] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { profile } = useUserProfile();
+  const [codeEntered, setCodeEntered] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('eesti-app-code-entered') === 'true';
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('eesti-app-authenticated') === 'true';
+  });
   const [activeTab, setActiveTab] = useState<'documents' | 'services'>('documents');
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Persist authentication state to localStorage
+  useEffect(() => {
+    localStorage.setItem('eesti-app-code-entered', String(codeEntered));
+  }, [codeEntered]);
+
+  useEffect(() => {
+    localStorage.setItem('eesti-app-authenticated', String(isAuthenticated));
+  }, [isAuthenticated]);
 
   const handleCodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +58,10 @@ const Index = () => {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setCodeEntered(false);
     setActiveTab('documents');
+    localStorage.removeItem('eesti-app-code-entered');
+    localStorage.removeItem('eesti-app-authenticated');
   };
 
   // Show code entry screen first
@@ -89,51 +111,77 @@ const Index = () => {
 
   // Show main app if authenticated
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#0073e6]">Eesti äpp</h1>
-          <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
-            <LogOut size={16} />
-            Logi välja
-          </Button>
+      <header className="bg-gradient-to-b from-[#1a3a5c] to-[#0f2847] text-white">
+        <div className="px-5 pt-4 pb-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-xs text-white/70">{profile.personalCode}</p>
+              <h1 className="text-xl font-bold">{profile.firstName} {profile.lastName}</h1>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <Shield size={20} />
+              </button>
+              <button className="p-2 hover:bg-white/10 rounded-full transition-colors" onClick={handleLogout}>
+                <LogOut size={20} />
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* Navigation */}
-      <nav className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex space-x-8">
-            <button
-              className={`py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'documents'
-                  ? 'border-[#0073e6] text-[#0073e6]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setActiveTab('documents')}
-            >
-              Dokumendid
-            </button>
-            <button
-              className={`py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'services'
-                  ? 'border-[#0073e6] text-[#0073e6]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setActiveTab('services')}
-            >
-              Teenused
-            </button>
-          </div>
-        </div>
-      </nav>
+      {/* Page Title */}
+      <div className="bg-gradient-to-b from-[#0f2847] to-[#0a1a30] text-white px-5 pb-6">
+        <h2 className="text-3xl font-bold">
+          {activeTab === 'documents' ? 'Dokumentid' : 'Teenused'}
+        </h2>
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="flex-1 px-5 py-6 max-w-4xl w-full mx-auto">
         {activeTab === 'documents' && <DocumentWallet />}
         {activeTab === 'services' && <ServicesHub />}
       </main>
+
+      {/* Bottom Navigation */}
+      <nav className="bg-white border-t border-gray-200">
+        <div className="flex justify-around px-4 py-3">
+          <button
+            className={`flex flex-col items-center gap-1 py-2 px-4 transition-colors ${
+              activeTab === 'documents'
+                ? 'text-[#1a3a5c]'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('documents')}
+          >
+            <div className="text-lg">📋</div>
+            <span className="text-xs font-medium">Dokumendid</span>
+          </button>
+          <button
+            className={`flex flex-col items-center gap-1 py-2 px-4 transition-colors ${
+              activeTab === 'services'
+                ? 'text-[#1a3a5c]'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('services')}
+          >
+            <div className="text-lg">📋</div>
+            <span className="text-xs font-medium">Teenused</span>
+          </button>
+          <button className="flex flex-col items-center gap-1 py-2 px-4 text-gray-500 hover:text-gray-700 transition-colors">
+            <div className="text-lg">✉️</div>
+            <span className="text-xs font-medium">Postkast</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };
