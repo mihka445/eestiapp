@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import qrCodeImage from '@/assets/qr-code.png';
 import { Badge } from '@/components/ui/badge';
@@ -417,38 +416,57 @@ const DocumentWallet = () => {
 
   // ─── LIST VIEW (Wallet Stack) ───
   return (
-    <div className="min-h-screen bg-[#1a3a5c]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="px-5 pt-6 pb-4">
-        <h1 className="text-2xl font-bold text-white">Dokumendid</h1>
+      <div className="border-b border-gray-200">
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <h1 className="text-xl font-bold text-[#1a3a5c]">Ahisali Midas</h1>
+              <p className="text-xs text-gray-500">Minu Maksagas</p>
+            </div>
+            <div className="flex gap-3">
+              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <ScanLine className="w-5 h-5 text-gray-700" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <User className="w-5 h-5 text-gray-700" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stacked wallet cards */}
-      <div className="px-5 pb-6">
-        <div className="relative" style={{ height: `${80 + (documents.length - 1) * 72 + 20}px` }}>
-          {documents.map((doc, index) => {
+      {/* Page title */}
+      <div className="px-5 py-4">
+        <h2 className="text-lg font-semibold text-gray-900">Dokumentid</h2>
+      </div>
+
+      {/* Document cards grid */}
+      <div className="px-5 pb-8">
+        <div className="space-y-3">
+          {documents.map((doc) => {
             const isIdCard = doc.type === 'id-card';
             const isPassport = doc.type === 'passport';
             const isDL = doc.type === 'drivers-license';
-            const textColor = isPassport ? 'text-white' : 'text-[#1a3a5c]';
+            const textColor = isPassport ? 'text-white' : 'text-gray-900';
 
             return (
               <div
                 key={doc.id}
-                className={`absolute left-0 right-0 rounded-2xl cursor-pointer transition-all duration-300 hover:translate-y-[-2px] bg-gradient-to-br ${doc.gradient} shadow-lg`}
-                style={{ 
-                  top: `${index * 72}px`,
-                  zIndex: index + 1,
-                  height: '80px',
-                }}
+                className={`rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg bg-gradient-to-br ${doc.gradient} shadow-md`}
+                style={{ height: '120px' }}
                 onClick={() => setSelectedDocument(doc.id)}
               >
-                <div className="flex items-center h-full px-5">
-                  <h3 className={`text-lg font-semibold ${textColor}`}>{doc.title}</h3>
-                  <div className="flex-1 flex justify-center">
-                    {isIdCard && <EstonianFlag />}
-                    {isPassport && <PassportIcon />}
-                    {isDL && <EUFlag />}
+                <div className="flex items-center h-full px-6 justify-between">
+                  <div className="flex-1">
+                    <h3 className={`text-base font-semibold ${textColor}`}>{doc.title}</h3>
+                    <p className={`text-xs mt-1 ${isPassport ? 'text-white/70' : 'text-gray-600'}`}>{doc.subtitle}</p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    {isIdCard && <EstonianFlag className="w-12 h-8" />}
+                    {isPassport && <PassportIcon className="w-12 h-8" />}
+                    {isDL && <EUFlag className="w-12 h-8" />}
                   </div>
                 </div>
               </div>
@@ -457,20 +475,20 @@ const DocumentWallet = () => {
         </div>
       </div>
 
-      {/* Scan button */}
-      <div className="px-5 pb-8">
-        <button 
+      {/* Scan documents section */}
+      <div className="px-5 py-6 border-t border-gray-200">
+        <button
           onClick={() => setShowQR(true)}
-          className="flex items-center justify-center gap-2 w-full text-white/80 hover:text-white transition-colors py-3"
+          className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-700 transition-colors py-3 font-medium text-sm"
         >
-          <ScanLine className="w-5 h-5" />
-          <span className="text-sm font-medium">Skaneeri dokumenti</span>
+          <ScanLine className="w-4 h-4" />
+          <span>Skaneeri dokumenti</span>
         </button>
       </div>
 
       {/* QR Code Modal */}
       {showQR && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" onClick={() => setShowQR(false)}>
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setShowQR(false)}>
           <div className="bg-white rounded-2xl p-6 mx-6 max-w-sm w-full" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-[#1a3a5c]">Skaneeri dokumenti</h2>
